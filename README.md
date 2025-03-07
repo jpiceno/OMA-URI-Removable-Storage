@@ -47,6 +47,18 @@ Example AccessMask combinations:
 
 ---
 
+## **Conditions for Entries**
+Entries can be **restricted to specific users and devices**.
+
+### **Supported Conditions**
+- **User/User Group Condition** → Restricts access to a specific **user or group**.
+- **Machine Condition** → Restricts access to a specific **device or device group**.
+- **Parameters Condition** → Applies conditions based on additional factors.
+
+To retrieve a **user's SID**, run the following PowerShell command:
+```powershell
+whoami /user
+
 ## **Example: Allowing Read-Only USB Access**
 The following XML snippet allows **read-only access** for specific devices:
 
