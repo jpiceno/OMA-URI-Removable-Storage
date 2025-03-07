@@ -20,6 +20,43 @@ A **rule** defines the list of **included groups** and **excluded groups**. The 
 - An **entry** defines the **action** and **notification options** applied when a request matches the conditions.
 - If no rules apply, the **default enforcement** is applied.
 
+## **Entries in Device Control Policies**
+Device control policies define **access permissions** (called an **entry**) for a set of devices.
+
+### **Entry Properties**
+| Entry Setting     | Options |
+|------------------|---------|
+| **AccessMask**   | Defines allowed operations (bitwise OR of values). |
+| **Action**       | `Allow`, `Deny`, `AuditAllow`, `AuditDeny` |
+| **Notification** | `None`, `Event is generated`, `User receives notification` |
+
+### **AccessMask Values**
+| Access Type     | Value |
+|---------------|-------|
+| **Device Read** | `1` |
+| **Device Write** | `2` |
+| **Device Execute** | `4` |
+| **File Read** | `8` |
+| **File Write** | `16` |
+| **File Execute** | `32` |
+| **Print** | `64` |
+
+Example AccessMask combinations:
+- **Device Read + Write + Execute** → `7` (1 + 2 + 4)
+- **Device Read + File Read** → `9` (1 + 8)
+
+---
+
+## **Example: Allowing Read-Only USB Access**
+The following XML snippet allows **read-only access** for specific devices:
+
+```xml
+<Entry Id="{e3837e60-5e56-43ce-8095-043ccd793eac}">
+    <Type>Allow</Type>
+    <Options>0</Options>
+    <AccessMask>1</AccessMask> <!-- Device Read Only -->
+</Entry>
+
 ### **Example Policy - Read-Only USB Access**
 The following XML snippet demonstrates how to allow **read-only access** for certain USB devices:
 
@@ -32,6 +69,8 @@ The following XML snippet demonstrates how to allow **read-only access** for cer
   <ExcludedIdList>
       <GroupId>{3f5253e4-0e73-4587-bb9e-bb29a2171695}</GroupId>
   </ExcludedIdList>
+
+
   <Entry Id="{e3837e60-5e56-43ce-8095-043ccd793eac}">
    ...
   </Entry>
