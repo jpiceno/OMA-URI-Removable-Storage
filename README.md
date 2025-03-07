@@ -55,25 +55,6 @@ To allow **write access** for some USB devices while providing **read access** t
 
 Device control policies define access (called an **entry**) for a set of devices. Entries specify action and notification options for matching policies and conditions.
 
-### Entry Settings and Options
-
-| Entry Setting   | Options |
-|----------------|---------|
-| **AccessMask** | Applies action if operations match: <br>- `1` - Device Read <br>- `2` - Device Write <br>- `4` - Device Execute <br>- `8` - File Read <br>- `16` - File Write <br>- `32` - File Execute <br>- `64` - Print <br> **Example:** Device Read, Write, and Execute = `7` (1+2+4) |
-| **Action** | `Allow`, `Deny`, `AuditAllow`, `AuditDeny` |
-| **Notification** | `None` (default), Event generated, User notified |
-
-## Access Types
-
-| Access Type      | Value | Description |
-|------------------|-------|-------------|
-| **Device Read**  | `1`   | Grants permission to read data from the device itself (e.g., querying device info, metadata, or accessing raw device data). |
-| **Device Write** | `2`   | Grants permission to write data to the device itself, such as formatting a USB drive or modifying its partition structure. |
-| **Device Execute** | `4` | Grants permission to execute code or commands on the device (rarely used). |
-| **File Read**  | `8`   | Grants permission to read files stored on the device (e.g., opening a document from a USB drive). |
-| **File Write** | `16`  | Grants permission to write files onto the device (e.g., saving a document to a USB drive). |
-| **File Execute** | `32`  | Grants permission to execute files stored on the device (e.g., running a .exe file from a USB drive). |
-
 ## Conditions
 
 Entries can be further scoped using optional conditions:
@@ -148,6 +129,16 @@ Device control policies define access (called an **entry**) for a set of devices
 | **Action** | `Allow`, `Deny`, `AuditAllow`, `AuditDeny` |
 | **Notification** | `None` (default), Event generated, User notified |
 
+## Access Types
+
+| Access Type      | Value | Description |
+|------------------|-------|-------------|
+| **Device Read**  | `1`   | Grants permission to read data from the device itself (e.g., querying device info, metadata, or accessing raw device data). |
+| **Device Write** | `2`   | Grants permission to write data to the device itself, such as formatting a USB drive or modifying its partition structure. |
+| **Device Execute** | `4` | Grants permission to execute code or commands on the device (rarely used). |
+| **File Read**  | `8`   | Grants permission to read files stored on the device (e.g., opening a document from a USB drive). |
+| **File Write** | `16`  | Grants permission to write files onto the device (e.g., saving a document to a USB drive). |
+| **File Execute** | `32`  | Grants permission to execute files stored on the device (e.g., running a .exe file from a USB drive). |
 ## Entry Evaluation
 
 There are two types of entries:
