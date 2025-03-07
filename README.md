@@ -98,4 +98,75 @@ Applies the action only if parameters match specific conditions (See **Advanced 
 - Allow **read access** to specific USBs **only** for a particular **user** on a specific **device**.
 
 ---
-This document provides a comprehensive guide to configuring device control policies using **Microsoft Intune OMA-URI** settings.
+# Device Control Policy XML Configuration
+
+## XML Configuration Example
+```xml
+<PolicyRule Id="{75a4e33a-5268-4552-bef2-e34dd0c39cb1}">
+  <Name>Read Only Access for USBs</Name>
+  <IncludedIdList>
+      <GroupId>{3f5253e4-0e73-4587-bb9e-bb29a2171694}</GroupId>
+  </IncludedIdList>
+  <ExcludedIdList>
+      <GroupId>{3f5253e4-0e73-4587-bb9e-bb29a2171695}</GroupId>
+  </ExcludedIdList>
+  <Entry Id="{e3837e60-5e56-43ce-8095-043ccd793eac}">
+   ...
+  </Entry>
+  <Entry Id="{34413b98-8198-4e16-accf-c95c3c775ba3}">
+    ...
+  </Entry>
+</PolicyRule>
+```
+
+## Property Descriptions
+
+| Property Name     | Description | Options |
+|------------------|-------------|---------|
+| **PolicyRule Id** | GUID, a unique ID, represents the policy and is used in reporting and troubleshooting. | Generate via PowerShell. |
+| **Name** | String, the name of the policy and displays on toast notifications. | User-defined |
+| **IncludedIdList** | The groups that the policy applies to. If multiple groups are added, the media must be a member of each group in the list to be included. | The Group ID/GUID must be used. |
+| **ExcludedIdList** | The groups that the policy doesn't apply to. If multiple groups are added, the media must be a member of a group in the list to be excluded. | The Group ID/GUID must be used. |
+| **Entry** | One PolicyRule can have multiple entries; each entry with a unique GUID tells device control one restriction. | See Entry Properties table for details. |
+
+### Example Group ID Usage:
+```xml
+<IncludedIdList>
+    <GroupId>{EAA4CCE5-F6C9-4760-8BAD-FDCC76A2ACA1}</GroupId>
+</IncludedIdList>
+```
+
+## Entry Configuration
+
+Device control policies define access (called an **entry**) for a set of devices. Entries define the action and notification options for devices that match the policy and conditions defined in the entry.
+
+### Entry Settings and Options
+
+| Entry Setting   | Options |
+|----------------|---------|
+| **AccessMask** | Applies action if operations match: <br>- `1` - Device Read <br>- `2` - Device Write <br>- `4` - Device Execute <br>- `8` - File Read <br>- `16` - File Write <br>- `32` - File Execute <br>- `64` - Print <br> **Example:** Device Read, Write, and Execute = `7` (1+2+4) |
+| **Action** | `Allow`, `Deny`, `AuditAllow`, `AuditDeny` |
+| **Notification** | `None` (default), Event generated, User notified |
+
+## Entry Evaluation
+
+There are two types of entries:
+- **Enforcement entries**: `Allow` / `Deny`
+- **Audit entries**: `AuditAllow` / `AuditDeny`
+
+### **Enforcement Entries**
+Enforcement entries for a rule are evaluated **in order** until all requested permissions are matched. If no entries match a rule, the next rule is evaluated. If no rules match, then the **default policy** is applied.
+
+### **Audit Entries**
+Audit events control the behavior when device control enforces a rule (`Allow/Deny`). Device control can:
+- Display a **notification** to the end-user, which includes the policy name and the device name. The notification appears once **every hour** after initial access is denied.
+- Create an **event** available in **Advanced Hunting**.
+
+### **Important**
+- There's a limit of **300 events per device per day**.
+- Audit entries are processed **after** the enforcement decision is made.
+- All corresponding audit entries are evaluated.
+
+---
+This document provides a structured guide to defining **Device Control Policies** using XML configuration.
+
