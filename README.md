@@ -1,89 +1,90 @@
-# Device Control Policy Management with Intune and Windows
+# Device Control Policies
 
-This document outlines how to manage **device control policies** in **Microsoft Intune** and **Windows** using different policy types, XML configurations, and best practices.
+This article describes device control policies, rules, entries, groups, and advanced conditions. Essentially, device control policies define access for a set of devices. The devices that are in scope are determined by a list of included device groups and a list of excluded device groups. A policy applies if the device is in all of the included device groups and none of the excluded device groups. If no policies apply, then the default enforcement is applied.
 
----
+## Configure Removable Storage Access Control using OMA-URI
 
-## **Management Tools and How Rules Are Managed**
+1. Go to the **Microsoft Intune** admin center and sign in.
+2. Navigate to **Devices > Configuration profiles**.
+3. Under the **Policies** tab (selected by default), select **+ Create**, and choose **+ New policy** from the drop-down that appears.
+4. In the **Platform** list, select **Windows 10, Windows 11, and Windows Server**, then choose **Templates** from the **Profile type** drop-down list.
+5. Once you choose **Templates**, the **Template name** pane is displayed along with a search box.
+6. Select **Custom** from the **Template name** pane and click **Create**.
+7. Create a row for each setting, group, or policy by implementing steps 1-5.
 
-| Management Tool                     | Operating System | Description |
-|-------------------------------------|-----------------|-------------|
-| **Intune – Device Control Policy**  | Windows         | Device and printer groups can be managed as reusable settings and included in rules. Not all features are available in the device control policy. See [Deploy and manage device control with Microsoft Intune](https://docs.microsoft.com/en-us/mem/intune/protect/device-control). |
-| **Intune – Custom**                 | Windows         | Each group/rule is stored as an XML string in a custom configuration policy. The OMA-URI contains the GUID of the group/rule. The GUID must be generated manually. |
+## Default Device Control Settings
 
----
+By default, device control is disabled, allowing access to all types of devices. Below are three **OMA-URI** settings to modify the default control and enforcement:
 
-## **Rules and Entries in Device Control Policies**
+### Device Control Default Enforcement
+- **OMA-URI:** `./Vendor/MSFT/Defender/Configuration/DefaultEnforcement`
+- **Data Type:** Integer
+- **Values:**
+  - `1` - DefaultEnforcementAllow
+  - `2` - DefaultEnforcementDeny
 
-A **rule** defines the list of **included groups** and **excluded groups**. The device must be a **member of all included groups** and **not part of any excluded groups** for the rule to apply. If a device matches a rule, then its **entries** are evaluated.
+### Enable Device Control
+- **OMA-URI:** `./Vendor/MSFT/Defender/Configuration/DeviceControlEnabled`
+- **Data Type:** Integer
+- **Values:**
+  - `0` - Disable
+  - `1` - Enable
 
-- An **entry** defines the **action** and **notification options** applied when a request matches the conditions.
-- If no rules apply, the **default enforcement** is applied.
+## Rules
 
-## **Entries in Device Control Policies**
-Device control policies define **access permissions** (called an **entry**) for a set of devices.
+A rule defines a list of included and excluded groups. A rule applies if the device belongs to all the included groups and none of the excluded groups. If the device matches the rule, the entries for that rule are evaluated.
 
-### **Entry Properties**
-| Entry Setting     | Options |
-|------------------|---------|
-| **AccessMask**   | Defines allowed operations (bitwise OR of values). |
-| **Action**       | `Allow`, `Deny`, `AuditAllow`, `AuditDeny` |
-| **Notification** | `None`, `Event is generated`, `User receives notification` |
+### Example: USB Write and Read Access Control
+To allow **write access** for some USB devices while providing **read access** to all others, use the following:
 
-### **AccessMask Values**
-| Access Type     | Value |
-|---------------|-------|
-| **Device Read** | `1` |
-| **Device Write** | `2` |
-| **Device Execute** | `4` |
-| **File Read** | `8` |
-| **File Write** | `16` |
-| **File Execute** | `32` |
-| **Print** | `64` |
+| Property Name    | Description | Options |
+|-----------------|-------------|---------|
+| PolicyRule Id   | GUID, unique policy identifier used in reporting/troubleshooting | Generate via PowerShell |
+| Name            | String, policy name displayed on toast notifications | User-defined |
+| IncludedIdList  | Groups the policy applies to | Group ID/GUID |
+| ExcludedIdList  | Groups the policy does not apply to | Group ID/GUID |
 
-Example AccessMask combinations:
-- **Device Read + Write + Execute** → `7` (1 + 2 + 4)
-- **Device Read + File Read** → `9` (1 + 8)
-
----
-
-## **Conditions for Entries**
-Entries can be **restricted to specific users and devices**.
-
-### **Supported Conditions**
-- **User/User Group Condition** → Restricts access to a specific **user or group**.
-- **Machine Condition** → Restricts access to a specific **device or device group**.
-- **Parameters Condition** → Applies conditions based on additional factors.
-
-To retrieve a **user's SID**, run the following PowerShell command:
-```powershell
-whoami /user
-
-## **Example: Allowing Read-Only USB Access**
-The following XML snippet allows **read-only access** for specific devices:
-
+#### Example XML for Included ID List:
 ```xml
-<Entry Id="{e3837e60-5e56-43ce-8095-043ccd793eac}">
-    <Type>Allow</Type>
-    <Options>0</Options>
-    <AccessMask>1</AccessMask> <!-- Device Read Only -->
-</Entry>
+<IncludedIdList>
+    <GroupId>{EAA4CCE5-F6C9-4760-8BAD-FDCC76A2ACA1}</GroupId>
+</IncludedIdList>
+```
 
-### **Example Policy - Read-Only USB Access**
-The following XML snippet demonstrates how to allow **read-only access** for certain USB devices:
+## Entries
 
-```xml
-<PolicyRule Id="{75a4e33a-5268-4552-bef2-e34dd0c39cb1}">
-  <Name>Read Only Access for USBs</Name>
-  <IncludedIdList>
-      <GroupId>{3f5253e4-0e73-4587-bb9e-bb29a2171694}</GroupId>
-  </IncludedIdList>
-  <ExcludedIdList>
-      <GroupId>{3f5253e4-0e73-4587-bb9e-bb29a2171695}</GroupId>
-  </ExcludedIdList>
+Device control policies define access (called an **entry**) for a set of devices. Entries specify action and notification options for matching policies and conditions.
 
+### Entry Settings and Options
 
-  <Entry Id="{e3837e60-5e56-43ce-8095-043ccd793eac}">
-   ...
-  </Entry>
-</PolicyRule> 
+| Entry Setting   | Options |
+|----------------|---------|
+| **AccessMask** | Applies action if operations match: <br>- `1` - Device Read <br>- `2` - Device Write <br>- `4` - Device Execute <br>- `8` - File Read <br>- `16` - File Write <br>- `32` - File Execute <br>- `64` - Print <br> **Example:** Device Read, Write, and Execute = `7` (1+2+4) |
+| **Action** | `Allow`, `Deny`, `AuditAllow`, `AuditDeny` |
+| **Notification** | `None` (default), Event generated, User notified |
+
+## Conditions
+
+Entries can be further scoped using optional conditions:
+
+### User/User Group Condition
+Applies the action only to users/groups identified by **Security Identifier (SID)**.
+
+- For **Microsoft Entra ID** users/groups, use the **Object ID**.
+- For **local** users/groups, use the **SID**.
+- Retrieve a user's SID using PowerShell:
+  ```powershell
+  whoami /user
+  ```
+
+### Machine Condition
+Applies the action only to a device/group identified by **SID**.
+
+### Parameters Condition
+Applies the action only if parameters match specific conditions (See **Advanced Conditions**).
+
+### Example Use Case:
+- Allow **read access** to specific USBs **only** for a particular **user** on a specific **device**.
+
+---
+This document provides a comprehensive guide to configuring device control policies using **Microsoft Intune OMA-URI** settings.
